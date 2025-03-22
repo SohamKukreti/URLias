@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Alias Navigator</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 10px; width: 250px; }
+    input, button { width: 100%; margin-bottom: 10px; padding: 5px; box-sizing: border-box; }
+    #aliases { margin-top: 15px; }
+    .alias-entry { font-size: 14px; margin: 5px 0; word-break: break-word; }
+    .alias-name { font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h3>Set Alias</h3>
+  <input id="alias" placeholder="Alias (e.g. yt)" />
+  <input id="url" placeholder="URL (e.g. https://youtube.com)" />
+  <button id="save">Save</button>
+
+  <div id="aliases">
+    <h4>Saved Aliases</h4>
+    <div id="alias-list">Loading...</div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

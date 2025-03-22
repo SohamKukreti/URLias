@@ -1,0 +1,21 @@
+{
+    "manifest_version": 3,
+    "name": "Alias Navigator",
+    "description": "Use terminal-style aliases to navigate the web.",
+    "version": "1.0",
+    "permissions": ["storage"],
+    "omnibox": { "keyword": "go" },
+    "action": {
+      "default_popup": "popup.html",
+      "default_icon": {
+        "128": "icon128.png"
+      }
+    },
+    "background": {
+      "service_worker": "background.js"
+    },
+    "icons": {
+      "128": "icon128.png"
+    }
+  }
+  
