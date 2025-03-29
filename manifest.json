@@ -6,16 +6,16 @@
     "permissions": ["storage"],
     "omnibox": { "keyword": "go" },
     "action": {
-      "default_popup": "popup.html",
+      "default_popup": "views/popup.html",
       "default_icon": {
-        "128": "icon128.png"
+        "128": "assets/icon128.png"
       }
     },
     "background": {
-      "service_worker": "background.js"
+      "service_worker": "scripts/background.js"
     },
     "icons": {
-      "128": "icon128.png"
+      "128": "assets/icon128.png"
     }
   }
   
