@@ -237,7 +237,7 @@
   
 
   body::before {
-    content: "Alias Navigator v1.0 [Terminal Mode] \A\A Initializing system...\A Loading aliases...\A System ready.\A\A";
+    content: "URLias v1.0 [Terminal Mode] \A\A Initializing system...\A Loading aliases...\A System ready.\A\A";
     white-space: pre;
     display: block;
     color: var(--terminal-text-dim);

@@ -1,6 +1,6 @@
 {
     "manifest_version": 3,
-    "name": "Alias Navigator",
+    "name": "URLias",
     "description": "Use terminal-style aliases to navigate the web.",
     "version": "1.0",
     "permissions": ["storage"],
