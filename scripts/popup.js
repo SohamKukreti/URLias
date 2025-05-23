@@ -44,46 +44,70 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
+  const searchInput = document.getElementById("search-aliases");
+  let currentAliases = {};
+
+  function filterAliases(searchTerm) {
+    const filteredEntries = Object.entries(currentAliases).filter(([alias, url]) => {
+      const search = searchTerm.toLowerCase();
+      return alias.toLowerCase().includes(search) || url.toLowerCase().includes(search);
+    });
+
+    displayAliases(Object.fromEntries(filteredEntries));
+  }
+
+  searchInput.addEventListener("input", (e) => {
+    filterAliases(e.target.value.trim());
+  });
+
+  function displayAliases(aliases) {
+    aliasList.innerHTML = "";
+
+    if (Object.keys(aliases).length === 0) {
+      aliasList.textContent = "No aliases found.";
+      return;
+    }
+
+    for (const [alias, url] of Object.entries(aliases)) {
+      const div = document.createElement("div");
+      div.className = "alias-entry";
+      div.innerHTML = `
+        <span class="alias-name">${alias}:</span>
+        <div class="alias-url" contenteditable="true" data-alias="${alias}">${url}</div>
+        <div class="alias-actions">
+          <button data-alias="${alias}" class="delete-btn">Delete</button>
+        </div>
+      `;
+      aliasList.appendChild(div);
+    }
+
+    // Add event listeners for delete buttons and editable URLs
+    addEventListeners();
+  }
+
+  function addEventListeners() {
+    document.querySelectorAll(".delete-btn").forEach((button) => {
+      button.addEventListener("click", (e) => {
+        const alias = e.target.getAttribute("data-alias");
+        deleteAlias(alias);
+      });
+    });
+
+    document.querySelectorAll(".alias-url").forEach((div) => {
+      div.addEventListener("input", (e) => {
+        const alias = e.target.getAttribute("data-alias");
+        const newUrl = e.target.textContent.trim();
+        if (newUrl) {
+          saveEditedAlias(alias, newUrl);
+        }
+      });
+    });
+  }
 
   function loadAliases() {
     chrome.storage.sync.get("aliases", (data) => {
-      const aliases = data.aliases || {};
-      aliasList.innerHTML = "";
-
-      if (Object.keys(aliases).length === 0) {
-        aliasList.textContent = "No aliases saved.";
-        return;
-      }
-
-      for (const [alias, url] of Object.entries(aliases)) {
-        const div = document.createElement("div");
-        div.className = "alias-entry";
-        div.innerHTML = `
-          <span class="alias-name">${alias}:</span>
-          <div class="alias-url" contenteditable="true" data-alias="${alias}">${url}</div>
-          <div class="alias-actions">
-            <button data-alias="${alias}" class="delete-btn">Delete</button>
-          </div>
-        `;
-        aliasList.appendChild(div);
-      }
-
-      document.querySelectorAll(".delete-btn").forEach((button) => {
-        button.addEventListener("click", (e) => {
-          const alias = e.target.getAttribute("data-alias");
-          deleteAlias(alias);
-        });
-      });
-
-      document.querySelectorAll(".alias-url").forEach((div) => {
-        div.addEventListener("input", (e) => {
-          const alias = e.target.getAttribute("data-alias");
-          const newUrl = e.target.textContent.trim();
-          if (newUrl) {
-            saveEditedAlias(alias, newUrl);
-          }
-        });
-      });
+      currentAliases = data.aliases || {};
+      displayAliases(currentAliases);
     });
   }
 

@@ -246,3 +246,26 @@
     padding-bottom: 10px;
     border-bottom: 1px dashed var(--terminal-text-dim);
   }
+
+  #search-aliases {
+    margin-bottom: 15px;
+    width: 100%;
+    padding: 8px;
+    background-color: var(--terminal-bg);
+    color: var(--terminal-text);
+    border: 1px solid var(--terminal-text-dim);
+    font-family: var(--terminal-font);
+    font-size: 0.9rem;
+    box-sizing: border-box;
+  }
+  
+  #search-aliases:focus {
+    outline: none;
+    border-color: var(--terminal-text);
+    box-shadow: 0 0 5px rgba(51, 255, 51, 0.5);
+  }
+  
+  #search-aliases::placeholder {
+    color: var(--terminal-text-dim);
+    opacity: 0.7;
+  }
