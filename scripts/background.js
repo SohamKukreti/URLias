@@ -13,7 +13,6 @@ async function getAliases() {
 }
 
 function normalizeUrl(url) {
-  // No changes needed here, it's standard JavaScript
   if (!url) return null; // Handle potentially empty URLs
   try {
     // Check if it already has a protocol
@@ -36,9 +35,19 @@ browser.omnibox.onInputEntered.addListener(async (input, disposition) => {
   if (!input) return; // Ignore empty input
 
   const aliases = await getAliases();
-  let targetUrl = aliases[input.trim()]; // Use trimmed input
+  const parts = input.trim().split(/\s+/);
+  const aliasKey = parts[0];
+  const extraQuery = parts.slice(1).join(" ");
+  console.log(input)
+  console.log(parts)
+  targetUrl = aliases[aliasKey]
+  // let targetUrl = aliases[input.trim()]; // Use trimmed input
 
   if (targetUrl) {
+      if (extraQuery) {
+        targetUrl = targetUrl.replace(/\/+$/, "");
+        targetUrl += "/" + encodeURIComponent(extraQuery);
+      }
     // Alias found, normalize the stored URL
     targetUrl = normalizeUrl(targetUrl);
   }
