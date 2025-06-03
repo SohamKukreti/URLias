@@ -31,9 +31,6 @@ document.addEventListener("DOMContentLoaded", function () {
   const statusMessage = document.getElementById("status-message"); // Optional: Add an element for status messages
 
   const loadDefaultsBtn = document.getElementById("load-defaults-btn");
-  const searchInput = document.getElementById("search-aliases");
-  let currentAliases = {}; // Store current aliases for filtering
-
   loadDefaultsBtn.addEventListener("click", async function () {
     try {
       const data = await browser.storage.sync.get("aliases");
@@ -112,79 +109,80 @@ document.addEventListener("DOMContentLoaded", function () {
 
   async function loadAliases() {
     try {
-      const data = await getStorageData("aliases");
-      currentAliases = data.aliases || {};
-      displayFilteredAliases(currentAliases);
+      const data = await getStorageData("aliases"); // Gets { aliases: { ... } }
+      const aliases = data.aliases || {};
+      aliasList.innerHTML = ""; // Clear previous list
+
+      if (Object.keys(aliases).length === 0) {
+        aliasList.innerHTML = "<li>No aliases saved yet.</li>"; // Use list item for consistency
+        return;
+      }
+
+      // Sort aliases alphabetically for better readability
+      const sortedAliases = Object.entries(aliases).sort((a, b) => a[0].localeCompare(b[0]));
+
+      for (const [alias, url] of sortedAliases) {
+        const li = document.createElement("li"); // Use list items for semantic list
+        li.className = "alias-entry";
+        // Using textContent for safety against XSS in alias/url display
+        const aliasSpan = document.createElement('span');
+        aliasSpan.className = 'alias-name';
+        aliasSpan.textContent = `${alias}: `; // Add colon and space
+
+        const urlDiv = document.createElement('div');
+        urlDiv.className = 'alias-url';
+        urlDiv.contentEditable = 'true';
+        urlDiv.textContent = url;
+        urlDiv.setAttribute('data-alias', alias);
+        urlDiv.setAttribute('aria-label', `URL for alias ${alias}`); // Accessibility
+
+        const actionsDiv = document.createElement('div');
+        actionsDiv.className = 'alias-actions';
+
+        const deleteButton = document.createElement('button');
+        deleteButton.setAttribute('data-alias', alias);
+        deleteButton.className = 'delete-btn';
+        deleteButton.textContent = 'Delete';
+        deleteButton.setAttribute('aria-label', `Delete alias ${alias}`); // Accessibility
+
+        actionsDiv.appendChild(deleteButton);
+        li.appendChild(aliasSpan);
+        li.appendChild(urlDiv);
+        li.appendChild(actionsDiv);
+        aliasList.appendChild(li);
+
+        // Add listeners inside the loop for clarity
+        deleteButton.addEventListener("click", async () => {
+          await deleteAlias(alias);
+        });
+
+        let debounceTimer;
+        urlDiv.addEventListener("input", (e) => {
+            // Debounce the save operation to avoid saving on every keystroke
+            clearTimeout(debounceTimer);
+            const newUrl = e.target.textContent.trim();
+            const currentAlias = e.target.getAttribute('data-alias');
+            if (newUrl) {
+                 debounceTimer = setTimeout(async () => {
+                     await saveEditedAlias(currentAlias, newUrl);
+                     // Optional: Indicate saved status briefly
+                     e.target.style.backgroundColor = '#e8f5e9'; // Light green
+                     setTimeout(() => { e.target.style.backgroundColor = ''; }, 1000);
+                 }, 750); // Save 750ms after user stops typing
+            }
+        });
+         // Handle paste event if needed (stripping formatting)
+         urlDiv.addEventListener('paste', (e) => {
+            e.preventDefault();
+            const text = e.clipboardData.getData('text/plain');
+            document.execCommand('insertText', false, text);
+         });
+      }
     } catch (error) {
+      // Error handled in getStorageData, maybe log additional context here
       console.error("Failed to load aliases in UI:", error);
       aliasList.innerHTML = "<li>Error loading aliases.</li>";
     }
-  }
-
-  function displayFilteredAliases(aliases, searchTerm = '') {
-    aliasList.innerHTML = "";
-    
-    let filteredAliases = Object.entries(aliases);
-    
-    if (searchTerm) {
-      const search = searchTerm.toLowerCase();
-      filteredAliases = filteredAliases.filter(([alias, data]) => {
-        const url = typeof data === 'string' ? data : data.url;
-        return alias.toLowerCase().includes(search) || 
-               url.toLowerCase().includes(search);
-      });
-    }
-
-    if (filteredAliases.length === 0) {
-      aliasList.innerHTML = searchTerm ? 
-        "<div>No matching aliases found.</div>" : 
-        "<div>No aliases saved yet.</div>";
-      return;
-    }
-
-    // Sort aliases alphabetically
-    filteredAliases.sort((a, b) => a[0].localeCompare(b[0]));
-
-    for (const [alias, data] of filteredAliases) {
-      const url = typeof data === 'string' ? data : data.url;
-      const starred = typeof data === 'object' ? data.starred : false;
-      
-      const div = document.createElement("div");
-      div.className = "alias-entry";
-      div.innerHTML = `
-        <span class="star-icon ${starred ? 'starred' : ''}" data-alias="${alias}"></span>
-        <span class="alias-name">${alias}:</span>
-        <br>
-        <div class="alias-url" contenteditable="true" data-alias="${alias}">${url}</div>
-        <div class="alias-actions">
-          <button data-alias="${alias}" class="delete-btn">Delete</button>
-        </div>
-      `;
-      aliasList.appendChild(div);
-    }
-
-    // Add event listeners for the newly created elements
-    document.querySelectorAll(".delete-btn").forEach(button => {
-      button.addEventListener("click", () => {
-        deleteAlias(button.getAttribute("data-alias"));
-      });
-    });
-
-    document.querySelectorAll(".star-icon").forEach(star => {
-      star.addEventListener("click", () => {
-        toggleStarred(star.getAttribute("data-alias"));
-      });
-    });
-
-    document.querySelectorAll(".alias-url").forEach(urlDiv => {
-      urlDiv.addEventListener("input", (e) => {
-        const alias = e.target.getAttribute("data-alias");
-        const newUrl = e.target.textContent.trim();
-        if (newUrl) {
-          saveEditedAlias(alias, newUrl);
-        }
-      });
-    });
   }
 
   async function saveAlias(event) {
@@ -242,31 +240,68 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  async function deleteAlias(alias) {
-    // Use confirm for user verification
-    if (confirm(`Are you sure you want to delete the alias "${alias}"?`)) {
-      try {
-        const data = await getStorageData("aliases");
-        const aliases = data.aliases || {};
-        if (aliases.hasOwnProperty(alias)) {
-          delete aliases[alias];
-          await setStorageData({ aliases: aliases });
-          setStatusMessage(`Alias "${alias}" deleted.`, false);
-          await loadAliases(); // Refresh the list
-        } else {
-            setStatusMessage(`Alias "${alias}" not found for deletion.`, true);
-        }
-      } catch (error) {
-        console.error(`Error deleting alias "${alias}":`, error);
-         // Status message handled by setStorageData/getStorageData
+  function showConfirmModal(message) {
+    return new Promise((resolve) => {
+      const modal = document.getElementById('confirm-modal');
+      const messageEl = document.getElementById('modal-message');
+      const confirmBtn = document.getElementById('modal-confirm');
+      const cancelBtn = document.getElementById('modal-cancel');
+
+      messageEl.textContent = message;
+      modal.style.display = 'block';
+
+      function cleanup() {
+        modal.style.display = 'none';
+        confirmBtn.removeEventListener('click', handleConfirm);
+        cancelBtn.removeEventListener('click', handleCancel);
       }
-    }
+
+      function handleConfirm() {
+        cleanup();
+        resolve(true);
+      }
+
+      function handleCancel() {
+        cleanup();
+        resolve(false);
+      }
+
+      confirmBtn.addEventListener('click', handleConfirm);
+      cancelBtn.addEventListener('click', handleCancel);
+    });
   }
 
-  // Add search event listener
-  searchInput.addEventListener("input", (e) => {
-    displayFilteredAliases(currentAliases, e.target.value.trim());
-  });
+  async function deleteAlias(alias) {
+    try {
+      const confirmed = await showConfirmModal(`Do you want to delete the alias "${alias}"?`);
+      
+      if (confirmed) {
+        const data = await getStorageData("aliases");
+        const aliases = data.aliases || {};
+        
+        if (aliases.hasOwnProperty(alias)) {
+          delete aliases[alias];
+          await setStorageData({ aliases });
+          await loadAliases();
+          
+          await browser.notifications.create({
+            type: "basic",
+            title: "Success",
+            message: `Alias "${alias}" has been deleted`,
+            iconUrl: browser.runtime.getURL("assets/icon48.png")
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error during alias deletion:", error);
+      await browser.notifications.create({
+        type: "basic",
+        title: "Error",
+        message: "Failed to delete alias",
+        iconUrl: browser.runtime.getURL("assets/icon48.png")
+      });
+    }
+  }
 
   // Initial setup
   aliasForm.addEventListener("submit", saveAlias);

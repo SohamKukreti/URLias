@@ -268,3 +268,51 @@
     color: var(--terminal-text-dim);
     opacity: 0.7;
   }
+
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    z-index: 1000;
+  }
+  
+  .modal-content {
+    background-color: var(--terminal-bg);
+    border: 1px solid var(--terminal-text);
+    padding: 20px;
+    width: 80%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 10px rgba(51, 255, 51, 0.3);
+  }
+  
+  .modal p {
+    color: var(--terminal-text);
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  
+  .modal-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+  }
+  
+  .modal-buttons button {
+    width: auto;
+    min-width: 80px;
+  }
+  
+  #modal-confirm {
+    border-color: var(--terminal-text);
+  }
+  
+  #modal-cancel {
+    border-color: var(--terminal-text-dim);
+  }
