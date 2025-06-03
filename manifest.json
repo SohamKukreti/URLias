@@ -4,7 +4,7 @@
   "name": "URLias",
   "description": "Use terminal-style aliases to navigate the web.",
   "version": "1.0",
-  "permissions": ["storage", "tabs"],
+  "permissions": ["storage", "tabs", "notifications"],
   "omnibox": { "keyword": "go" },
   "action": {
     "default_popup": "views/popup.html",

@@ -1,12 +1,67 @@
-// Use 'browser' directly.
-// Remove the check/assignment: var browser = typeof browser !== "undefined" ? browser : chrome;
-
 document.addEventListener("DOMContentLoaded", function () {
+  const defaultAliases = {
+    "yt": "https://youtube.com",
+    "gh": "https://github.com",
+    "gm": "https://mail.google.com",
+    "rd": "https://reddit.com",
+    "tw": "https://twitter.com",
+    "ig": "https://instagram.com",
+    "fb": "https://facebook.com",
+    "ln": "https://linkedin.com",
+    "so": "https://stackoverflow.com",
+    "wa": "https://web.whatsapp.com",
+    "gp": "https://photos.google.com",
+    "gmaps": "https://maps.google.com",
+    "amz": "https://amazon.in",
+    "mdn": "https://developer.mozilla.org",
+    "lc": "https://leetcode.com",
+    "ytm": "https://music.youtube.com",
+    "dev": "https://dev.to",
+    "hn": "https://news.ycombinator.com",
+    "tg": "https://web.telegram.org",
+    "pin": "https://pinterest.com",
+    "net": "https://netflix.com",
+    "sp": "https://spotify.com"
+  };
+
   const aliasForm = document.getElementById("alias-form");
   const aliasInput = document.getElementById("alias");
   const urlInput = document.getElementById("url");
   const aliasList = document.getElementById("alias-list");
   const statusMessage = document.getElementById("status-message"); // Optional: Add an element for status messages
+
+  const loadDefaultsBtn = document.getElementById("load-defaults-btn");
+  loadDefaultsBtn.addEventListener("click", async function () {
+    try {
+      const data = await browser.storage.sync.get("aliases");
+      const aliases = data.aliases || {};
+
+      for (const [alias, url] of Object.entries(defaultAliases)) {
+        if (!aliases[alias]) {
+          aliases[alias] = url;
+        }
+      }
+
+      await browser.storage.sync.set({ aliases });
+      await loadAliases();
+      
+      // Replace alert with browser notification
+      await browser.notifications.create({
+        type: "basic",
+        title: "URLias",
+        message: "Default aliases loaded successfully",
+        iconUrl: browser.runtime.getURL("assets/icon48.png")
+      });
+    } catch (error) {
+      console.error("Error loading defaults:", error);
+      await browser.notifications.create({
+        type: "basic",
+        title: "URLias Error",
+        message: "Error loading default aliases",
+        iconUrl: browser.runtime.getURL("assets/icon48.png")
+      });
+    }
+  });
 
   // Utility: Simplified async get from storage using Promises
   async function getStorageData(key) {
