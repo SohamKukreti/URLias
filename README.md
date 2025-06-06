@@ -2,10 +2,12 @@
 
 <img src="assets/icon128.png" width="100" align="center" alt="URLias Icon">
 
+
 URLias is a browser extension that lets you quickly navigate to your favorite websites using simple aliases. By typing a predefined alias (like `gh`) in your browser's address bar, you can instantly jump to the corresponding URL (e.g., `https://github.com`). It even supports wildcard matching, so if you type an alias followed by extra text (for example, `gh user`), URLias will automatically append the extra text as a new path segment (resulting in `https://github.com/user`).
 
 Currently Supports firefox and chromium based browsers (checkout firefox branch for firefox version).
 
+[Add it to firefox](https://addons.mozilla.org/en-US/firefox/addon/urlias/)
 
 ## Features
 
@@ -15,7 +17,25 @@ Currently Supports firefox and chromium based browsers (checkout firefox branch 
 - **Persistent Storage:** Aliases are stored using the browser's sync storage, making them available across devices.
 - **Simple UI:** Add, edit, and delete aliases via a user-friendly popup interface.
 
+## Usage
 
+1. **Navigating Using Aliases:**
+
+- In your browser’s address bar, type your alias:
+
+- `go <alias name>`
+
+- Example usage:
+
+- `go gh` -> https://github.com/
+
+- If you add extra text (e.g., `go gh user`), the extension appends the extra text to the saved URL (resulting in `https://github.com/user`)
+
+2. **Managing Aliases:**
+
+   - **Adding:** Use the popup form to create a new alias.
+   - **Editing:** Directly edit the URL in the list. Changes are saved automatically.
+   - **Deleting:** Click the delete button next to an alias to remove it.
 
 ## Installation
 
@@ -44,21 +64,6 @@ Currently Supports firefox and chromium based browsers (checkout firefox branch 
    - Click on the URLias icon to open the popup.
    - Enter an alias and its corresponding URL (e.g., `gh` and `https://github.com`).
    - Save your alias. You can now use the alias directly in your browser's address bar.
-
-
-
-## Usage
-
-1. **Navigating Using Aliases:**
-
-   - In your browser’s address bar, type your alias (e.g., `gh`).
-   - If you add extra text (e.g., `gh user`), the extension appends the extra text to the saved URL (resulting in `https://github.com/user`).
-
-2. **Managing Aliases:**
-
-   - **Adding:** Use the popup form to create a new alias.
-   - **Editing:** Directly edit the URL in the list. Changes are saved automatically.
-   - **Deleting:** Click the delete button next to an alias to remove it.
 
 ## TODO
 
