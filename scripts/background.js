@@ -37,16 +37,21 @@ browser.omnibox.onInputEntered.addListener(async (input, disposition) => {
   const aliases = await getAliases();
   const parts = input.trim().split(/\s+/);
   const aliasKey = parts[0];
-  const extraQuery = parts.slice(1).join(" ");
+  let extraQuery = "";
+  for (let i = 1; i < parts.length; i++) {
+    const part = encodeURIComponent(parts[i]);
+    extraQuery += part + "/";
+  }
   console.log(input)
   console.log(parts)
+  console.log(extraQuery)
   targetUrl = aliases[aliasKey]
   // let targetUrl = aliases[input.trim()]; // Use trimmed input
 
   if (targetUrl) {
       if (extraQuery) {
         targetUrl = targetUrl.replace(/\/+$/, "");
-        targetUrl += "/" + encodeURIComponent(extraQuery);
+        targetUrl += "/" + extraQuery;
       }
     // Alias found, normalize the stored URL
     targetUrl = normalizeUrl(targetUrl);
