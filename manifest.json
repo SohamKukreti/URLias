@@ -3,7 +3,7 @@
   "manifest_version": 3,
   "name": "URLias",
   "description": "Use terminal-style aliases to navigate the web.",
-  "version": "1.5",
+  "version": "2.0",
   "permissions": ["storage", "tabs", "notifications"],
   "omnibox": { "keyword": "go" },
   "action": {

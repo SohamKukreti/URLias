@@ -290,4 +290,37 @@ document.addEventListener("DOMContentLoaded", function () {
   // Initial setup
   aliasForm.addEventListener("submit", saveAlias);
   loadAliases(); // Load aliases when popup opens
+
+  const searchTriggerInput = document.getElementById("search-trigger");
+  const saveSearchTriggerBtn = document.getElementById("save-search-trigger");
+
+  // Load and display the current search trigger word
+  async function loadSearchTrigger() {
+    try {
+      const data = await browser.storage.sync.get("searchTrigger");
+      searchTriggerInput.value = data.searchTrigger || "search";
+    } catch (error) {
+      console.error("Error loading search trigger:", error);
+      setStatusMessage("Error loading search trigger", true);
+    }
+  }
+
+  // Save the search trigger word
+  saveSearchTriggerBtn.addEventListener("click", async function () {
+    const trigger = searchTriggerInput.value.trim();
+    if (!trigger) {
+      setStatusMessage("Search trigger word cannot be empty.", true);
+      return;
+    }
+    try {
+      await browser.storage.sync.set({ searchTrigger: trigger });
+      setStatusMessage(`Search trigger word set to '${trigger}'!`, false);
+    } catch (error) {
+      console.error("Error saving search trigger:", error);
+      setStatusMessage("Error saving search trigger", true);
+    }
+  });
+
+  // Call on popup load
+  loadSearchTrigger();
 });

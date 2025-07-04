@@ -84,13 +84,18 @@ function buildSearchUrl(homeUrl, query) {
 browser.omnibox.onInputEntered.addListener(async (input, disposition) => {
   if (!input) return; // Ignore empty input
 
+  let {searchTrigger} = await browser.storage.sync.get("searchTrigger");
+  if(!searchTrigger) {
+    searchTrigger = "search";
+  }
+
   const aliases = await getAliases();
   const parts = input.trim().split(/\s+/);
   const aliasKey = parts[0];
   let extraQuery = "";
   let targetUrl = null;
   console.log(parts)
-  if (parts.length > 1 && parts[1] === "search") {
+  if (parts.length > 1 && parts[1] === searchTrigger) {
     console.log("Search triggered for alias:", aliasKey, "with query:", parts.slice(2).join(" "));
     targetUrl = buildSearchUrl(aliases[aliasKey], parts.slice(2).join(" "));
     console.log("Built search URL:", targetUrl);
