@@ -1,28 +1,6 @@
+import { defaultAliases } from "./builtIns.js";
+
 document.addEventListener("DOMContentLoaded", function () {
-  const defaultAliases = {
-    "yt": "https://youtube.com",
-    "gh": "https://github.com",
-    "gm": "https://mail.google.com",
-    "rd": "https://reddit.com",
-    "tw": "https://twitter.com",
-    "ig": "https://instagram.com",
-    "fb": "https://facebook.com",
-    "ln": "https://linkedin.com",
-    "so": "https://stackoverflow.com",
-    "wa": "https://web.whatsapp.com",
-    "gp": "https://photos.google.com",
-    "gmaps": "https://maps.google.com",
-    "amz": "https://amazon.in",
-    "mdn": "https://developer.mozilla.org",
-    "lc": "https://leetcode.com",
-    "ytm": "https://music.youtube.com",
-    "dev": "https://dev.to",
-    "hn": "https://news.ycombinator.com",
-    "tg": "https://web.telegram.org",
-    "pin": "https://pinterest.com",
-    "net": "https://netflix.com",
-    "sp": "https://spotify.com"
-  };
 
   const aliasForm = document.getElementById("alias-form");
   const aliasInput = document.getElementById("alias");
