@@ -3,7 +3,7 @@
   "manifest_version": 3,
   "name": "URLias",
   "description": "Use terminal-style aliases to navigate the web.",
-  "version": "1.0",
+  "version": "1.5",
   "permissions": ["storage", "tabs", "notifications"],
   "omnibox": { "keyword": "go" },
   "action": {
@@ -12,8 +12,9 @@
       "128": "assets/icon128.png"
     }
   },
-  "background": {
-    "scripts": ["scripts/background.js"]
+ "background": {
+    "scripts": ["scripts/background.js"],
+    "type": "module"
   },
   "icons": {
     "128": "assets/icon128.png"

@@ -1,6 +1,8 @@
 browser.omnibox.setDefaultSuggestion({ description: "Navigate to a site using an alias." });
+import { BUILTIN_SEARCH_TPL } from "./builtIns.js";
 
-// Updated getAliases to directly use the Promise returned by browser.storage.sync.get
+/* ---------- alias helpers ---------- */
+
 async function getAliases() {
   try {
     // browser.storage.sync.get returns a Promise in Firefox
@@ -11,6 +13,8 @@ async function getAliases() {
     return {}; // Return empty object on error
   }
 }
+
+/* ---------- url helpers ---------- */
 
 function normalizeUrl(url) {
   if (!url) return null; // Handle potentially empty URLs
@@ -31,6 +35,52 @@ function normalizeUrl(url) {
   }
 }
 
+/* ---------- search helpers ---------- */
+
+function hostnameChain(host) {
+  console.log(host)
+  const chain = [];
+  let h = host;
+  console.log(h)
+  while (h) {
+    chain.push(h);
+    const dot = h.indexOf(".");
+    if (dot === -1) break;
+    h = h.slice(dot + 1);            // peel one sub-domain level
+  }
+  return chain;
+}
+
+function templateFor(url) {
+  console.log("url in templateFor: ", url)
+  url = normalizeUrl(url)
+  let host;
+  try {
+    host = new URL(url).hostname.replace(/^www\./, "");
+    console.log("host in templateFor: ", host)
+  } catch (error){
+    console.log("error in templateFor: ", error)
+    return null;
+  }
+  console.log(host)
+  for (const h of hostnameChain(host)) {
+    if (BUILTIN_SEARCH_TPL[h]) return BUILTIN_SEARCH_TPL[h];
+  }
+  return null;
+}
+
+function buildSearchUrl(homeUrl, query) {
+  if (!query) return normalizeUrl(homeUrl);          // just open alias
+  console.log("homeUrl: ", homeUrl)
+  const tpl =
+    templateFor(homeUrl) ||
+    `https://www.google.com/search?q=site:${encodeURIComponent(
+      new URL(homeUrl).hostname
+    )}+%s`;
+  console.log(tpl)
+  return tpl.replace("%s", encodeURIComponent(query.trim()));
+}
+
 browser.omnibox.onInputEntered.addListener(async (input, disposition) => {
   if (!input) return; // Ignore empty input
 
@@ -38,28 +88,38 @@ browser.omnibox.onInputEntered.addListener(async (input, disposition) => {
   const parts = input.trim().split(/\s+/);
   const aliasKey = parts[0];
   let extraQuery = "";
-  for (let i = 1; i < parts.length; i++) {
-    const part = encodeURIComponent(parts[i]);
-    extraQuery += part + "/";
-  }
-  console.log(input)
+  let targetUrl = null;
   console.log(parts)
-  console.log(extraQuery)
-  targetUrl = aliases[aliasKey]
-  // let targetUrl = aliases[input.trim()]; // Use trimmed input
+  if (parts.length > 1 && parts[1] === "search") {
+    console.log("Search triggered for alias:", aliasKey, "with query:", parts.slice(2).join(" "));
+    targetUrl = buildSearchUrl(aliases[aliasKey], parts.slice(2).join(" "));
+    console.log("Built search URL:", targetUrl);
+  } 
+  else {
+    for (let i = 1; i < parts.length; i++) {
+      const part = encodeURIComponent(parts[i]);
+      extraQuery += part + "/";
+    }
+    console.log(input)
+    console.log(parts)
+    console.log(extraQuery)
+    targetUrl = aliases[aliasKey]
+  
+    // let targetUrl = aliases[input.trim()]; // Use trimmed input
 
-  if (targetUrl) {
-      if (extraQuery) {
-        targetUrl = targetUrl.replace(/\/+$/, "");
-        targetUrl += "/" + extraQuery;
-      }
-    // Alias found, normalize the stored URL
-    targetUrl = normalizeUrl(targetUrl);
-  }
+    if (targetUrl) {
+        if (extraQuery) {
+          targetUrl = targetUrl.replace(/\/+$/, "");
+          targetUrl += "/" + extraQuery;
+        }
+      // Alias found, normalize the stored URL
+      targetUrl = normalizeUrl(targetUrl);
+    }
 
-  // If no alias matched OR normalization failed, perform a default search
-  if (!targetUrl) {
-    targetUrl = `https://www.google.com/search?q=${encodeURIComponent(input.trim())}`;
+    // If no alias matched OR normalization failed, perform a default search
+    if (!targetUrl) {
+      targetUrl = `https://www.google.com/search?q=${encodeURIComponent(input.trim())}`;
+    }
   }
 
   // Open the URL based on disposition
