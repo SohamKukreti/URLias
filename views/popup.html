@@ -24,6 +24,16 @@
       <button id="save-search-trigger">Save</button>
     </div>
   </div>
+  <div id="collections-section">
+    <h4>Collections</h4>
+    <form id="collection-form">
+      <input id="collection-name" placeholder="Collection name (e.g., work)" required />
+      <div id="collection-aliases-input" class="hashtag-input" tabindex="0"></div>
+      <input type="hidden" id="collection-aliases" name="collection-aliases" />
+      <button type="submit">Save Collection</button>
+    </form>
+    <div id="collections-list">Loading...</div>
+  </div>
   <div id="confirm-modal" class="modal">
     <div class="modal-content">
       <p id="modal-message"></p>

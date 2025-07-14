@@ -399,3 +399,117 @@
     margin-bottom: 0;
     display: inline-block;
   }
+
+/* Collections Section */
+#collections-section {
+  border: 1px solid var(--terminal-text-dim);
+  padding: 12px;
+  margin-top: 20px;
+  position: relative;
+}
+#collections-section::before {
+  content: "[COLLECTIONS]";
+  position: absolute;
+  top: -10px;
+  left: 10px;
+  background-color: var(--terminal-bg);
+  padding: 0 5px;
+  font-size: 0.8rem;
+  color: var(--terminal-text-dim);
+}
+#collection-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+#collection-name {
+  width: 100%;
+  margin-bottom: 0;
+}
+.hashtag-input {
+  min-height: 38px;
+  border: 1px solid var(--terminal-text-dim);
+  background: var(--terminal-bg);
+  color: var(--terminal-text);
+  padding: 6px 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  cursor: text;
+  font-family: var(--terminal-font);
+  font-size: 1rem;
+  margin-bottom: 0;
+}
+.hashtag-tag {
+  background: var(--terminal-highlight);
+  color: var(--terminal-text);
+  border: 1px solid var(--terminal-text);
+  border-radius: 3px;
+  padding: 2px 8px;
+  margin-right: 2px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  font-size: 0.95em;
+  transition: background 0.2s;
+}
+.hashtag-tag:hover {
+  background: var(--terminal-text);
+  color: var(--terminal-bg);
+}
+.hashtag-tag .remove-tag {
+  margin-left: 4px;
+  color: var(--terminal-text-dim);
+  cursor: pointer;
+  font-weight: bold;
+}
+.hashtag-input input {
+  background: transparent;
+  border: none;
+  color: var(--terminal-text);
+  outline: none;
+  font-family: var(--terminal-font);
+  font-size: 1rem;
+  min-width: 60px;
+  flex: 1;
+}
+#collections-list {
+  margin-top: 10px;
+  max-height: 120px;
+  overflow-y: auto;
+  font-size: 1rem;
+}
+.collection-entry {
+  padding: 6px 0;
+  border-bottom: 1px dashed var(--terminal-text-dim);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.collection-name {
+  font-weight: bold;
+  color: var(--terminal-text);
+  margin-right: 8px;
+}
+.collection-aliases {
+  color: var(--terminal-text-dim);
+  font-size: 0.95em;
+  flex: 1;
+  word-break: break-all;
+}
+.collection-actions button {
+  padding: 2px 8px;
+  font-size: 0.9rem;
+  background-color: transparent;
+  color: var(--terminal-text);
+  border: 1px solid var(--terminal-text-dim);
+  width: auto;
+  margin-left: 4px;
+}
+.collection-actions button:hover {
+  border-color: var(--terminal-text);
+  background-color: var(--terminal-highlight);
+}
