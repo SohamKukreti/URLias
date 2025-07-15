@@ -2,18 +2,22 @@ chrome.omnibox.onInputEntered.addListener((text) => {
 
   const parts = text.trim().split(/\s+/);
   const aliasKey = parts[0];
-  const extraQuery = parts.slice(1).join(" ");
+  // const extraQuery = parts.slice(1).join(" ");
   console.log(text)
   console.log(parts)
   chrome.storage.sync.get("aliases", (data) => {
     const aliases = data.aliases || {};
 
     let url = aliases[aliasKey];
-
+    let extraQuery = "";
     if (url) {
+      for(let i = 1; i < parts.length; i++) {
+        const part = parts[i];
+        extraQuery += encodeURIComponent(part) + "/";
+      }
       if (extraQuery) {
         url = url.replace(/\/+$/, "");
-        url += "/" + encodeURIComponent(extraQuery);
+        url += "/" + extraQuery;
       }
     } else {
       url = `https://www.google.com/search?q=${encodeURIComponent(text)}`;
