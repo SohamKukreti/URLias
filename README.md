@@ -12,9 +12,10 @@ Currently Supports firefox and chromium based browsers (checkout firefox branch 
 - **Quick Navigation:** Jump directly to a website using a simple alias.
 - **Wildcard Matching:** Automatically append additional path segments to the base URL.
 - **Omnibox Integration:** Use your browser's address bar for easy access.
-- **Persistent Storage:** Aliases are stored using the browser's sync storage, making them available across devices.
-- **Simple UI:** Add, edit, and delete aliases via a user-friendly popup interface.
-
+- **Custom Search Trigger:** Set a custom keyword (e.g., 'search', 'find') to trigger site-specific or global search from the omnibox.
+- **Collections:** Group multiple aliases together and open all sites in a collection with a single command.
+- **Persistent Storage:** Aliases and collections are stored using the browser's sync storage, making them available across devices.
+- **Simple UI:** Add, edit, and delete aliases and collections via a user-friendly popup interface.
 
 
 ## Installation
@@ -39,48 +40,40 @@ Currently Supports firefox and chromium based browsers (checkout firefox branch 
    - **Other Browsers:**  
      Follow your browser's instructions for loading unpacked or temporary extensions.
 
-3. **Set Up Your Aliases:**
+3. **Set Up Your Aliases and Collections:**
 
    - Click on the URLias icon to open the popup.
    - Enter an alias and its corresponding URL (e.g., `gh` and `https://github.com`).
    - Save your alias. You can now use the alias directly in your browser's address bar.
-
+   - To create a collection, enter a collection name, add aliases using the tag input, and save. Collections let you open multiple sites at once.
+   - You can also set a custom search trigger word in the popup (e.g., 'search', 'find', 'lookup').
 
 
 ## Usage
 
-1. **Navigating Using Aliases:**
+### Navigating Using Aliases
 
-   - In your browser’s address bar, type your alias (e.g., `gh`).
-   - If you add extra text (e.g., `gh user`), the extension appends the extra text to the saved URL (resulting in `https://github.com/user`).
+- In your browser’s address bar, type your alias (e.g., `gh`).
+- If you add extra text (e.g., `gh user`), the extension appends the extra text to the saved URL (resulting in `https://github.com/user`).
 
-2. **Managing Aliases:**
+### Using the Search Trigger
 
-   - **Adding:** Use the popup form to create a new alias.
-   - **Editing:** Directly edit the URL in the list. Changes are saved automatically.
-   - **Deleting:** Click the delete button next to an alias to remove it.
+- You can set a custom search trigger word (e.g., `search`, `find`, `lookup`) in the popup.
+- To search a site, type: `go <alias> <search trigger> <your query>` (e.g., `go gh search openai`).
+- If the alias supports site search, it will use the site’s search; otherwise, it will default to Google search.
+
+### Using Collections
+
+- Create a collection in the popup by entering a collection name and adding aliases.
+- To open all sites in a collection, type the collection name in the omnibox (e.g., `go work`). Each site in the collection will open in a new tab.
+
+### Managing Aliases and Collections
+
+- **Adding:** Use the popup form to create a new alias or collection.
+- **Editing:** Directly edit the URL in the list. Changes are saved automatically.
+- **Deleting:** Click the delete button next to an alias or collection to remove it.
 
 ## TODO
 
 1. **Support for Streaming Services:**  
-   Enable aliases that take users directly to their favorite movies or TV shows on platforms like Netflix, Hulu, Amazon Prime, etc. For example, allow commands like `netflix movie_name` to take you directly to a movie's page.
-
-2. **Advanced URL Parameter Customization:**  
-   Allow users to define more complex URL patterns with multiple parameters, making it easier to navigate dynamically constructed URLs.
-
-3. **Bookmarks Integration (maybe):**  
-   Offer an option to include bookmarks so users can quickly navigate to saved sites and even integrate bookmarks into the alias system.
-
-
-## Contributing
-
-Contributions are welcome! Please follow these steps:
-
-1. Fork the repository.
-2. Create a new branch for your feature or bug fix.
-3. Commit your changes with a clear message.
-4. Submit a pull request with a description of your changes.
-
-## License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+   Enable aliases that take users directly to their favorite movies or TV shows on platforms like Netflix, Hulu, Amazon Prime, etc. For example, allow commands like `netflix movie_name`
