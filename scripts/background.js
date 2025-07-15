@@ -1,55 +1,61 @@
 import { BUILTIN_SEARCH_TPL } from "./builtIns.js";
 
-async function handleAlias(text, searchTrigger, keepCurrentTab = true) {
+/* ---------- alias handler ---------- */
+
+async function handleAlias(text, aliases, searchTrigger, keepCurrentTab = true) {
   const parts = text.trim().split(/\s+/);
   const aliasKey = parts[0];
 
-  if(!searchTrigger) {
-    searchTrigger = "search"; 
-  }
-
-  // const extraQuery = parts.slice(1).join(" ");
   console.log(text)
   console.log(parts)
-  chrome.storage.sync.get("aliases", (data) => {
-    const aliases = data.aliases || {};
+  console.log(aliases)
+  console.log(searchTrigger)
+  console.log(keepCurrentTab)
 
-    let url = aliases[aliasKey];
-    let extraQuery = "";
-    if (url) {
+  let url = aliases[aliasKey];
+  let extraQuery = "";
+  if (url) {
 
-      if(parts.length > 1 && parts[1] === searchTrigger) {
-        url = buildSearchUrl(aliases[aliasKey], parts.slice(2).join(" "));
-      }
-
-      else{
-        for(let i = 1; i < parts.length; i++) {
-          const part = parts[i];
-          extraQuery += encodeURIComponent(part) + "/";
-        }
-        if (extraQuery) {
-          url = url.replace(/\/+$/, "");
-          url += "/" + extraQuery;
-        }
-      }
-    } 
-    
-    else {
-      url = `https://www.google.com/search?q=${encodeURIComponent(text)}`;
+    if(parts.length > 1 && parts[1] === searchTrigger) {
+      url = buildSearchUrl(aliases[aliasKey], parts.slice(2).join(" "));
     }
 
-    url = normalizeUrl(url);
+    else{
+      for(let i = 1; i < parts.length; i++) {
+        const part = parts[i];
+        extraQuery += encodeURIComponent(part) + "/";
+      }
+      if (extraQuery) {
+        url = url.replace(/\/+$/, "");
+        url += "/" + extraQuery;
+      }
+    }
+  } 
+  
+  else {
+    url = `https://www.google.com/search?q=${encodeURIComponent(text)}`;
+  }
 
-    chrome.tabs.query({ active: true, currentWindow: keepCurrentTab }, (tabs) => {
-      const currentTab = tabs[0];
-      if (currentTab && currentTab.id) {
-        chrome.tabs.update(currentTab.id, { url });
-      }
-      else{
-        chrome.tabs.create({ url });
-      }
-    });
+  url = normalizeUrl(url);
+
+  chrome.tabs.query({ active: true, currentWindow: keepCurrentTab }, (tabs) => {
+    const currentTab = tabs[0];
+    if (currentTab && currentTab.id) {
+      chrome.tabs.update(currentTab.id, { url });
+    }
+    else{
+      chrome.tabs.create({ url });
+    }
   });
+}
+
+function normalizeUrl(url) {
+  try {
+    new URL(url);
+    return url;
+  } catch (e) {
+    return `https://${url}`;
+  }
 }
 
 /* ---------- search helpers ---------- */
@@ -103,14 +109,9 @@ function buildSearchUrl(homeUrl, query) {
 /* ---------- entry point for the extension ---------- */
 
 chrome.omnibox.onInputEntered.addListener((text) => {
-  handleAlias(text);
+  chrome.storage.sync.get(["aliases", "searchTrigger"], (data) => {
+    const aliases = data.aliases || {};
+    const searchTrigger = data.searchTrigger || "search";
+    handleAlias(text, aliases, searchTrigger);
+  });
 });
-
-function normalizeUrl(url) {
-  try {
-    new URL(url);
-    return url;
-  } catch (e) {
-    return `https://${url}`;
-  }
-}
