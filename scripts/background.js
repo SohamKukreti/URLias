@@ -58,6 +58,15 @@ function normalizeUrl(url) {
   }
 }
 
+async function handleCollection(collection, aliases, searchTrigger){
+  const websites = collection.split(",");
+  // console.log("websites: ", websites)
+  // open each website in a new tab
+  for (const website of websites){
+    await handleAlias(website, aliases, searchTrigger, false);
+  }
+}
+
 /* ---------- search helpers ---------- */
 
 function hostnameChain(host) {
@@ -109,9 +118,20 @@ function buildSearchUrl(homeUrl, query) {
 /* ---------- entry point for the extension ---------- */
 
 chrome.omnibox.onInputEntered.addListener((text) => {
-  chrome.storage.sync.get(["aliases", "searchTrigger"], (data) => {
+  chrome.storage.sync.get(["aliases", "searchTrigger", "collections"], (data) => {
     const aliases = data.aliases || {};
     const searchTrigger = data.searchTrigger || "search";
-    handleAlias(text, aliases, searchTrigger);
+    const collections = data.collections || {};
+    const parts = text.trim().split(/\s+/);
+    const aliasKey = parts[0];
+    if(aliases[aliasKey]){
+      handleAlias(text, aliases, searchTrigger);
+    }
+    else if(collections[aliasKey]){
+      handleCollection(collections[aliasKey], aliases, searchTrigger);
+    }
+    else{
+      handleAlias(text, aliases, searchTrigger);
+    }
   });
 });
