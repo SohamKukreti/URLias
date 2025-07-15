@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Alias Navigator</title>
+  <title>URLias</title>
   <link rel="stylesheet" type="text/css" href="../assets/popupStyles.css">
 </head>
 <body>
@@ -14,10 +14,17 @@
   <button id="load-defaults-btn" style="margin-top:10px;">Load Default Aliases</button>
   <div id="aliases">
     <h4>Saved Aliases</h4>
-    <input id="search-aliases" type="text" placeholder="Search aliases or URLs..." />
+    <input type="text" id="search-aliases" placeholder="Search aliases or URLs..." />
     <div id="alias-list">Loading...</div>
   </div>
+  <div id="search-trigger-section">
+    <label for="search-trigger">Search trigger word:</label>
+    <div class="search-trigger-row">
+      <input id="search-trigger" placeholder="e.g., search, find, lookup" />
+      <button id="save-search-trigger">Save</button>
+    </div>
+  </div>
 
-  <script src="../scripts/popup.js"></script>
+  <script type="module" src="../scripts/popup.js"></script>
 </body>
 </html>

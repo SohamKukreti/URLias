@@ -1,28 +1,7 @@
+import { defaultAliases } from "./builtIns.js";
+
 document.addEventListener("DOMContentLoaded", function () {
-  const defaultAliases = {
-    "yt": "https://youtube.com",
-    "gh": "https://github.com",
-    "gm": "https://mail.google.com",
-    "rd": "https://reddit.com",
-    "tw": "https://twitter.com",
-    "ig": "https://instagram.com",
-    "fb": "https://facebook.com",
-    "ln": "https://linkedin.com",
-    "so": "https://stackoverflow.com",
-    "wa": "https://web.whatsapp.com",
-    "gp": "https://photos.google.com",
-    "gmaps": "https://maps.google.com",
-    "amz": "https://amazon.in",
-    "mdn": "https://developer.mozilla.org",
-    "lc": "https://leetcode.com",
-    "ytm": "https://music.youtube.com",
-    "dev": "https://dev.to",
-    "hn": "https://news.ycombinator.com",
-    "tg": "https://web.telegram.org",
-    "pin": "https://pinterest.com",
-    "net": "https://netflix.com",
-    "sp": "https://spotify.com"
-  };
+  
   const aliasForm = document.getElementById("alias-form");
   const aliasInput = document.getElementById("alias");
   const urlInput = document.getElementById("url");
@@ -161,4 +140,27 @@ document.addEventListener("DOMContentLoaded", function () {
 
   aliasForm.addEventListener("submit", saveAlias);
   loadAliases();
+
+  // --- Search Trigger Logic ---
+  const searchTriggerInput = document.getElementById("search-trigger");
+  const saveSearchTriggerBtn = document.getElementById("save-search-trigger");
+
+  function loadSearchTrigger() {
+    chrome.storage.sync.get("searchTrigger", (data) => {
+      searchTriggerInput.value = data.searchTrigger || "search";
+    });
+  }
+
+  saveSearchTriggerBtn.addEventListener("click", function () {
+    const trigger = searchTriggerInput.value.trim();
+    if (!trigger) {
+      alert("Search trigger word cannot be empty.");
+      return;
+    }
+    chrome.storage.sync.set({ searchTrigger: trigger }, () => {
+      alert(`Search trigger word set to '${trigger}'!`);
+    });
+  });
+
+  loadSearchTrigger();
 });
