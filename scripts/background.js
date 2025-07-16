@@ -2,7 +2,7 @@ import { BUILTIN_SEARCH_TPL } from "./builtIns.js";
 
 /* ---------- alias handler ---------- */
 
-async function handleAlias(text, aliases, searchTrigger, keepCurrentTab = true) {
+async function handleAlias(text, aliases, searchTrigger, keepCurrentTab = true, windowId = null) {
   const parts = text.trim().split(/\s+/);
   const aliasKey = parts[0];
 
@@ -38,15 +38,21 @@ async function handleAlias(text, aliases, searchTrigger, keepCurrentTab = true) 
 
   url = normalizeUrl(url);
 
-  chrome.tabs.query({ active: true, currentWindow: keepCurrentTab }, (tabs) => {
-    const currentTab = tabs[0];
-    if (currentTab && currentTab.id) {
-      chrome.tabs.update(currentTab.id, { url });
-    }
-    else{
-      chrome.tabs.create({ url });
-    }
-  });
+  if (keepCurrentTab) {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      const currentTab = tabs[0];
+      if (currentTab && currentTab.id) {
+        chrome.tabs.update(currentTab.id, { url });
+      } else {
+        chrome.tabs.create({ url });
+      }
+    });
+  } else {
+    // Always open a new background tab in the correct window
+    const createProps = { url, active: false };
+    if (windowId !== null) createProps.windowId = windowId;
+    chrome.tabs.create(createProps);
+  }
 }
 
 function normalizeUrl(url) {
@@ -58,12 +64,12 @@ function normalizeUrl(url) {
   }
 }
 
-async function handleCollection(collection, aliases, searchTrigger){
+async function handleCollection(collection, aliases, searchTrigger, windowId) {
   const websites = collection.split(",");
   // console.log("websites: ", websites)
   // open each website in a new tab
   for (const website of websites){
-    await handleAlias(website, aliases, searchTrigger, false);
+    await handleAlias(website, aliases, searchTrigger, false, windowId);
   }
 }
 
@@ -118,20 +124,21 @@ function buildSearchUrl(homeUrl, query) {
 /* ---------- entry point for the extension ---------- */
 
 chrome.omnibox.onInputEntered.addListener((text) => {
-  chrome.storage.sync.get(["aliases", "searchTrigger", "collections"], (data) => {
-    const aliases = data.aliases || {};
-    const searchTrigger = data.searchTrigger || "search";
-    const collections = data.collections || {};
-    const parts = text.trim().split(/\s+/);
-    const aliasKey = parts[0];
-    if(aliases[aliasKey]){
-      handleAlias(text, aliases, searchTrigger);
-    }
-    else if(collections[aliasKey]){
-      handleCollection(collections[aliasKey], aliases, searchTrigger);
-    }
-    else{
-      handleAlias(text, aliases, searchTrigger);
-    }
+  chrome.windows.getCurrent((currentWindow) => {
+    const windowId = currentWindow.id;
+    chrome.storage.sync.get(["aliases", "searchTrigger", "collections"], (data) => {
+      const aliases = data.aliases || {};
+      const searchTrigger = data.searchTrigger || "search";
+      const collections = data.collections || {};
+      const parts = text.trim().split(/\s+/);
+      const aliasKey = parts[0];
+      if (aliases[aliasKey]) {
+        handleAlias(text, aliases, searchTrigger, true, windowId);
+      } else if (collections[aliasKey]) {
+        handleCollection(collections[aliasKey], aliases, searchTrigger, windowId);
+      } else {
+        handleAlias(text, aliases, searchTrigger, true, windowId);
+      }
+    });
   });
 });
