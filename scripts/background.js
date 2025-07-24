@@ -110,6 +110,7 @@ function templateFor(url) {
 function buildSearchUrl(homeUrl, query) {
   if (!query) return normalizeUrl(homeUrl);          // just open alias
   // console.log("homeUrl: ", homeUrl)
+  homeUrl = normalizeUrl(homeUrl)
   const tpl =
     templateFor(homeUrl) ||
     `https://www.google.com/search?q=site:${encodeURIComponent(
