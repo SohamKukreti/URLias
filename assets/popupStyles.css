@@ -88,6 +88,12 @@
     color: var(--terminal-text-dim);
     opacity: 0.7;
   }
+
+  /* Specific smaller hint text for URL and collection name inputs */
+  #url::placeholder,
+  #collection-name::placeholder {
+    font-size: 0.85rem;
+  }
   
   button {
     background-color: var(--terminal-bg);
@@ -237,7 +243,7 @@
   
 
   body::before {
-    content: "URLias v1.0 [Terminal Mode] \A\A Initializing system...\A Loading aliases...\A System ready.\A\A";
+    content: "URLias v1.5 [Terminal Mode] \A\A Initializing system...\A Loading aliases...\A System ready.\A\A";
     white-space: pre;
     display: block;
     color: var(--terminal-text-dim);
@@ -406,6 +412,12 @@
   font-size: 1rem;
   min-width: 60px;
   flex: 1;
+}
+
+.hashtag-input input::placeholder {
+  color: var(--terminal-text-dim);
+  opacity: 0.7;
+  font-size: 0.9rem;
 }
 #collections-list {
   margin-top: 10px;
