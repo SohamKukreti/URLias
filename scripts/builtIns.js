@@ -17,6 +17,7 @@ export const BUILTIN_SEARCH_TPL = Object.freeze({
   
     /* Social & community */
     'twitter.com'     : 'https://twitter.com/search?q=%s',          // :contentReference[oaicite:0]{index=0}
+    'x.com'           : 'https://x.com/search?q=%s',
     'reddit.com'      : 'https://www.reddit.com/search/?q=%s',
     'linkedin.com'    : 'https://www.linkedin.com/search/results/all/?keywords=%s',
     'facebook.com'    : 'https://www.facebook.com/search/top/?q=%s',

@@ -51,7 +51,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const div = document.createElement("div");
       div.className = "alias-entry";
       div.innerHTML = `
-        <span class="alias-name">${alias}:</span>
+        <div class="alias-name" contenteditable="true" data-alias="${alias}">${alias}</div>:
         <div class="alias-url" contenteditable="true" data-alias="${alias}">${url}</div>
         <div class="alias-actions">
           <button data-alias="${alias}" class="delete-btn">Delete</button>
@@ -60,7 +60,7 @@ document.addEventListener("DOMContentLoaded", function () {
       aliasList.appendChild(div);
     }
 
-    // Add event listeners for delete buttons and editable URLs
+    // Add event listeners for delete buttons and editable fields
     addEventListeners();
   }
 
@@ -79,6 +79,20 @@ document.addEventListener("DOMContentLoaded", function () {
         if (newUrl) {
           saveEditedAlias(alias, newUrl);
         }
+      });
+    });
+
+    document.querySelectorAll(".alias-name").forEach((div) => {
+      div.addEventListener("blur", (e) => {
+        const oldAlias = e.target.getAttribute("data-alias");
+        const newAlias = e.target.textContent.trim();
+        if (!newAlias || newAlias === oldAlias) return;
+        if (currentAliases[newAlias]) {
+          alert(`Alias "${newAlias}" already exists.`);
+          e.target.textContent = oldAlias;
+          return;
+        }
+        renameAlias(oldAlias, newAlias);
       });
     });
   }
@@ -136,6 +150,16 @@ document.addEventListener("DOMContentLoaded", function () {
         chrome.storage.sync.set({ aliases }, loadAliases);
       });
     }
+  }
+
+  function renameAlias(oldAlias, newAlias) {
+    chrome.storage.sync.get("aliases", (data) => {
+      const aliases = data.aliases || {};
+      if (!aliases[oldAlias]) return;
+      aliases[newAlias] = aliases[oldAlias];
+      delete aliases[oldAlias];
+      chrome.storage.sync.set({ aliases }, loadAliases);
+    });
   }
 
   aliasForm.addEventListener("submit", saveAlias);
