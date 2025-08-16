@@ -1,19 +1,78 @@
 import { BUILTIN_SEARCH_TPL } from "./builtIns.js";
 
+/* ---------- performance optimizations ---------- */
+
+// Cache for storage data to reduce API calls
+let storageCache = {
+  aliases: {},
+  collections: {},
+  aliasUsage: {},
+  searchTrigger: "search",
+  lastUpdated: 0
+};
+
+// Cache expiration time (5 minutes)
+const CACHE_EXPIRY = 5 * 60 * 1000;
+
+// Debounce function for omnibox suggestions
+let suggestionTimeout = null;
+const SUGGESTION_DELAY = 150; // milliseconds
+
+// Load storage data with caching
+async function loadStorageData() {
+  const now = Date.now();
+  
+  // Return cached data if still valid
+  if (now - storageCache.lastUpdated < CACHE_EXPIRY) {
+    return storageCache;
+  }
+  
+  try {
+    const data = await chrome.storage.sync.get([
+      "aliases", 
+      "collections", 
+      "aliasUsage", 
+      "searchTrigger"
+    ]);
+    
+    // Update cache
+    storageCache = {
+      aliases: data.aliases || {},
+      collections: data.collections || {},
+      aliasUsage: data.aliasUsage || {},
+      searchTrigger: data.searchTrigger || "search",
+      lastUpdated: now
+    };
+    
+    return storageCache;
+  } catch (error) {
+    console.error("Error loading storage data:", error);
+    return storageCache; // Return stale cache on error
+  }
+}
+
+// Invalidate cache when storage changes
+chrome.storage.onChanged.addListener((changes) => {
+  if (changes.aliases || changes.collections || changes.aliasUsage || changes.searchTrigger) {
+    storageCache.lastUpdated = 0; // Force cache refresh
+  }
+});
+
 /* ---------- usage tracking ---------- */
 
 async function incrementAliasUsage(aliasName) {
   try {
-    const data = await chrome.storage.sync.get("aliasUsage");
-    const usage = data.aliasUsage || {};
+    // Update cache immediately for better UX
+    storageCache.aliasUsage[aliasName] = (storageCache.aliasUsage[aliasName] || 0) + 1;
     
-    // Increment usage counter for this alias
-    usage[aliasName] = (usage[aliasName] || 0) + 1;
+    // Save to storage asynchronously (don't await)
+    chrome.storage.sync.get("aliasUsage", (data) => {
+      const usage = data.aliasUsage || {};
+      usage[aliasName] = storageCache.aliasUsage[aliasName];
+      chrome.storage.sync.set({ aliasUsage: usage });
+    });
     
-    // Save updated usage data
-    await chrome.storage.sync.set({ aliasUsage: usage });
-    
-    console.log(`Usage incremented for ${aliasName}: ${usage[aliasName]}`);
+    console.log(`Usage incremented for ${aliasName}: ${storageCache.aliasUsage[aliasName]}`);
   } catch (error) {
     console.error("Error incrementing alias usage:", error);
   }
@@ -33,6 +92,29 @@ function getMostFrequentlyUsedAliases(aliases, usage, limit = 5) {
     .slice(0, limit);
 }
 
+// Pre-compute sorted aliases for better performance
+let sortedAliasesCache = [];
+let lastSortTime = 0;
+
+function getSortedAliases(aliases, usage) {
+  const now = Date.now();
+  
+  // Return cached sorted aliases if recent
+  if (now - lastSortTime < 1000 && sortedAliasesCache.length > 0) {
+    return sortedAliasesCache;
+  }
+  
+  // Create and sort aliases
+  sortedAliasesCache = Object.entries(aliases).map(([alias, url]) => ({
+    alias,
+    url,
+    usage: usage[alias] || 0
+  })).sort((a, b) => b.usage - a.usage);
+  
+  lastSortTime = now;
+  return sortedAliasesCache;
+}
+
 /* ---------- alias handler ---------- */
 
 async function handleAlias(text, aliases, searchTrigger, keepCurrentTab = true, windowId = null) {
@@ -48,8 +130,8 @@ async function handleAlias(text, aliases, searchTrigger, keepCurrentTab = true, 
   let url = aliases[aliasKey];
   let extraQuery = "";
   if (url) {
-    // Track usage when alias is found and used
-    await incrementAliasUsage(aliasKey);
+    // Track usage when alias is found and used (non-blocking)
+    incrementAliasUsage(aliasKey);
 
     if(parts.length > 1 && parts[1] === searchTrigger) {
       url = buildSearchUrl(aliases[aliasKey], parts.slice(2).join(" "));
@@ -161,64 +243,57 @@ function buildSearchUrl(homeUrl, query) {
 
 // Handle omnibox suggestions
 
-chrome.omnibox.setDefaultSuggestion({
-  description: "Type a URLias alias or collection name"
-});
-
 chrome.omnibox.onInputChanged.addListener((text, suggest) => {
-  chrome.storage.sync.get(["aliases", "collections", "aliasUsage"], (data) => {
-    const aliases = data.aliases || {};
-    const collections = data.collections || {};
-    const usage = data.aliasUsage || {};
-    
-    const suggestions = [];
-    const searchTerm = text.toLowerCase().trim();
-    
-    if (searchTerm === "") {
-      // When user types "go" (empty search term), show most frequently used aliases first
-      const mostUsedAliases = getMostFrequentlyUsedAliases(aliases, usage, 5);
+  // Clear previous timeout
+  if (suggestionTimeout) {
+    clearTimeout(suggestionTimeout);
+  }
+  
+  // Debounce suggestions to reduce processing
+  suggestionTimeout = setTimeout(async () => {
+    try {
+      const { aliases, collections, aliasUsage } = await loadStorageData();
       
-      // Add most frequently used aliases first
-      for (const aliasData of mostUsedAliases) {
-        suggestions.push({
-          content: `${aliasData.name}`,
-          description: `${aliasData.name} → ${aliasData.url} (used ${aliasData.usage} times)`
-        });
-      }
+      const suggestions = [];
+      const searchTerm = text.toLowerCase().trim();
       
-      // Add remaining aliases
-      for (const [alias, url] of Object.entries(aliases)) {
-        if (!mostUsedAliases.find(a => a.name === alias)) {
+      if (searchTerm === "") {
+        // When user types "go" (empty search term), show most frequently used aliases first
+        const mostUsedAliases = getMostFrequentlyUsedAliases(aliases, aliasUsage, 5);
+        
+        // Add most frequently used aliases first
+        for (const aliasData of mostUsedAliases) {
           suggestions.push({
-            content: `${alias}`,
-            description: `${alias} → ${url}`
+            content: `${aliasData.name}`,
+            description: `${aliasData.name} → ${aliasData.url} (used ${aliasData.usage} times)`
           });
         }
-      }
-      
-      // Add collections
-      for (const [collectionName, aliasesStr] of Object.entries(collections)) {
-        const aliasList = aliasesStr.split(',').slice(0, 3).join(', ');
-        const moreText = aliasesStr.split(',').length > 3 ? '...' : '';
-        suggestions.push({
-          content: `${collectionName}`,
-          description: `Collection: ${collectionName} (${aliasList}${moreText})`
-        });
-      }
-          } else {
+        
+        // Add remaining aliases
+        for (const [alias, url] of Object.entries(aliases)) {
+          if (!mostUsedAliases.find(a => a.name === alias)) {
+            suggestions.push({
+              content: `${alias}`,
+              description: `${alias} → ${url}`
+            });
+          }
+        }
+        
+        // Add collections
+        for (const [collectionName, aliasesStr] of Object.entries(collections)) {
+          const aliasList = aliasesStr.split(',').slice(0, 3).join(', ');
+          const moreText = aliasesStr.split(',').length > 3 ? '...' : '';
+          suggestions.push({
+            content: `${collectionName}`,
+            description: `Collection: ${collectionName} (${aliasList}${moreText})`
+          });
+        }
+      } else {
         // When user types something, show matching aliases and collections
-        // Create array of aliases with usage data and sort by usage
-        const aliasesWithUsage = Object.entries(aliases).map(([alias, url]) => ({
-          alias,
-          url,
-          usage: usage[alias] || 0
-        }));
+        // Use pre-computed sorted aliases for better performance
+        const sortedAliases = getSortedAliases(aliases, aliasUsage);
         
-        // Sort by usage count (descending)
-        aliasesWithUsage.sort((a, b) => b.usage - a.usage);
-        console.log("sortedAliases: ", aliasesWithUsage);
-        
-        for (const { alias, url, usage: usageCount } of aliasesWithUsage) {
+        for (const { alias, url, usage: usageCount } of sortedAliases) {
           if (alias.toLowerCase().includes(searchTerm)) {
             const description = usageCount > 0 
               ? `${alias} → ${url} (used ${usageCount} times)`
@@ -230,33 +305,37 @@ chrome.omnibox.onInputChanged.addListener((text, suggest) => {
             });
           }
         }
-      
-      for (const [collectionName, aliasesStr] of Object.entries(collections)) {
-        if (collectionName.toLowerCase().includes(searchTerm)) {
-          const aliasList = aliasesStr.split(',').slice(0, 3).join(', ');
-          const moreText = aliasesStr.split(',').length > 3 ? '...' : '';
-          suggestions.push({
-            content: `${collectionName}`,
-            description: `Collection: ${collectionName} (${aliasList}${moreText})`
-          });
+        
+        for (const [collectionName, aliasesStr] of Object.entries(collections)) {
+          if (collectionName.toLowerCase().includes(searchTerm)) {
+            const aliasList = aliasesStr.split(',').slice(0, 3).join(', ');
+            const moreText = aliasesStr.split(',').length > 3 ? '...' : '';
+            suggestions.push({
+              content: `${collectionName}`,
+              description: `Collection: ${collectionName} (${aliasList}${moreText})`
+            });
+          }
         }
       }
+      
+      // Limit suggestions to 10 items
+      suggest(suggestions.slice(0, 10));
+    } catch (error) {
+      console.error("Error generating suggestions:", error);
+      suggest([]);
     }
-    
-    // Limit suggestions to 10 items
-    suggest(suggestions.slice(0, 10));
-  });
+  }, SUGGESTION_DELAY);
 });
 
-chrome.omnibox.onInputEntered.addListener((text) => {
-  chrome.windows.getCurrent((currentWindow) => {
-    const windowId = currentWindow.id;
-    chrome.storage.sync.get(["aliases", "searchTrigger", "collections"], (data) => {
-      const aliases = data.aliases || {};
-      const searchTrigger = data.searchTrigger || "search";
-      const collections = data.collections || {};
+chrome.omnibox.onInputEntered.addListener(async (text) => {
+  try {
+    const { aliases, searchTrigger, collections } = await loadStorageData();
+    
+    chrome.windows.getCurrent((currentWindow) => {
+      const windowId = currentWindow.id;
       const parts = text.trim().split(/\s+/);
       const aliasKey = parts[0];
+      
       if (aliases[aliasKey]) {
         handleAlias(text, aliases, searchTrigger, true, windowId);
       } else if (collections[aliasKey]) {
@@ -265,5 +344,7 @@ chrome.omnibox.onInputEntered.addListener((text) => {
         handleAlias(text, aliases, searchTrigger, true, windowId);
       }
     });
-  });
+  } catch (error) {
+    console.error("Error handling omnibox input:", error);
+  }
 });
