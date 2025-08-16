@@ -124,6 +124,68 @@ function buildSearchUrl(homeUrl, query) {
 
 /* ---------- entry point for the extension ---------- */
 
+// Handle omnibox suggestions
+chrome.omnibox.onInputChanged.addListener((text, suggest) => {
+  chrome.storage.sync.get(["aliases", "collections"], (data) => {
+    const aliases = data.aliases || {};
+    const collections = data.collections || {};
+    
+    const suggestions = [];
+    const searchTerm = text.toLowerCase().trim();
+    
+    // If user types "go" or starts with "go ", show all aliases
+    if (searchTerm === "go" || searchTerm.startsWith("go ")) {
+      const aliasPart = searchTerm.startsWith("go ") ? searchTerm.substring(3) : "";
+      
+      // Add alias suggestions
+      for (const [alias, url] of Object.entries(aliases)) {
+        if (!aliasPart || alias.toLowerCase().includes(aliasPart)) {
+          suggestions.push({
+            content: `go ${alias}`,
+            description: `${alias} → ${url}`
+          });
+        }
+      }
+      
+      // Add collection suggestions
+      for (const [collectionName, aliasesStr] of Object.entries(collections)) {
+        if (!aliasPart || collectionName.toLowerCase().includes(aliasPart)) {
+          const aliasList = aliasesStr.split(',').slice(0, 3).join(', ');
+          const moreText = aliasesStr.split(',').length > 3 ? '...' : '';
+          suggestions.push({
+            content: `go ${collectionName}`,
+            description: `Collection: ${collectionName} (${aliasList}${moreText})`
+          });
+        }
+      }
+    } else {
+      // If user types just an alias name (without "go"), show suggestions too
+      for (const [alias, url] of Object.entries(aliases)) {
+        if (alias.toLowerCase().includes(searchTerm)) {
+          suggestions.push({
+            content: `go ${alias}`,
+            description: `${alias} → ${url}`
+          });
+        }
+      }
+      
+      for (const [collectionName, aliasesStr] of Object.entries(collections)) {
+        if (collectionName.toLowerCase().includes(searchTerm)) {
+          const aliasList = aliasesStr.split(',').slice(0, 3).join(', ');
+          const moreText = aliasesStr.split(',').length > 3 ? '...' : '';
+          suggestions.push({
+            content: `go ${collectionName}`,
+            description: `Collection: ${collectionName} (${aliasList}${moreText})`
+          });
+        }
+      }
+    }
+    
+    // Limit suggestions to 5 items
+    suggest(suggestions.slice(0, 10));
+  });
+});
+
 chrome.omnibox.onInputEntered.addListener((text) => {
   chrome.windows.getCurrent((currentWindow) => {
     const windowId = currentWindow.id;
