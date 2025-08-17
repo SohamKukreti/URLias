@@ -1,4 +1,5 @@
 import { defaultAliases } from "./builtIns.js";
+import { handleAlias } from "./utility.js";
 
 document.addEventListener("DOMContentLoaded", function () {
   // DOM Elements
@@ -134,7 +135,7 @@ document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll(".test-btn").forEach((button) => {
       button.addEventListener("click", (e) => {
         const alias = e.target.getAttribute("data-alias");
-        testAlias(alias);
+        handleAlias(alias, currentAliases, "search", false, null);
       });
     });
 
@@ -253,15 +254,6 @@ document.addEventListener("DOMContentLoaded", function () {
       renderHashtagInput();
       showNotification(`Alias renamed from "${oldAlias}" to "${newAlias}"!`);
     });
-  }
-
-  function testAlias(alias) {
-    const url = currentAliases[alias];
-    if (url) {
-      const normalizedUrl = url.startsWith('http') ? url : `https://${url}`;
-      chrome.tabs.create({ url: normalizedUrl });
-      showNotification(`Testing alias "${alias}"...`);
-    }
   }
 
   function loadDefaults() {
@@ -486,21 +478,21 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     document.querySelectorAll(".test-collection-btn").forEach((button) => {
-      button.addEventListener("click", (e) => {
+      button.addEventListener("click", async (e) => {
         const name = e.target.getAttribute("data-collection");
-        const aliases = currentCollections[name].split(",");
+        const collection = currentCollections[name];
         
-        if (confirm(`Open ${aliases.length} tabs for collection '${name}'?`)) {
-          aliases.forEach((alias, index) => {
-            const url = currentAliases[alias.trim()];
-            if (url) {
-              const normalizedUrl = url.startsWith('http') ? url : `https://${url}`;
-              setTimeout(() => {
-                chrome.tabs.create({ url: normalizedUrl, active: index === 0 });
-              }, index * 100); // Stagger tab opening
-            }
-          });
-          showNotification(`Opening collection '${name}'...`);
+        try {
+          const websites = collection.split(",");
+          console.log("websites: ", websites)
+          // open each website in a new tab
+          for (const website of websites) {
+            await handleAlias(website.trim(), currentAliases, "search", false, null);
+          }
+          showNotification(`Opened collection '${name}'`);
+        } catch (error) {
+          console.error('Error opening collection:', error);
+          showNotification(`Error opening collection: ${error.message}`);
         }
       });
     });
