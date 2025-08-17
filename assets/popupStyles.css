@@ -456,3 +456,26 @@
   border-color: var(--terminal-text);
   background-color: var(--terminal-highlight);
 }
+/* Button row styles */
+.button-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.button-row button {
+  flex: 1;
+  min-width: 120px;
+}
+
+/* Button stack styles */
+.button-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.button-stack button {
+  width: 100%;
+  padding: 10px 16px;
+}

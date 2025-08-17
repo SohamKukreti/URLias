@@ -8,6 +8,13 @@ document.addEventListener("DOMContentLoaded", function () {
   const aliasList = document.getElementById("alias-list");
 
   const loadDefaultsBtn = document.getElementById("load-defaults-btn");
+  const optionsBtn = document.getElementById("options-btn");
+  
+  // Options button event listener
+  optionsBtn.addEventListener("click", function () {
+    chrome.runtime.openOptionsPage();
+  });
+
   loadDefaultsBtn.addEventListener("click", function () {
     chrome.storage.sync.get("aliases", (data) => {
       const aliases = data.aliases || {};
