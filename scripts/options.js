@@ -502,7 +502,6 @@ document.addEventListener("DOMContentLoaded", function () {
         
         try {
           const websites = collection.split(",");
-          console.log("websites: ", websites)
           // open each website in a new tab
           for (const website of websites) {
             await handleAlias(website.trim(), currentAliases, "search", false, null);
