@@ -434,6 +434,24 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
+  function saveEditedCollection(collectionName, newAliases) {
+    currentCollections[collectionName] = newAliases;
+    chrome.storage.sync.set({ collections: currentCollections }, () => {
+      showNotification(`Collection '${collectionName}' updated!`);
+    });
+  }
+
+  function renameCollection(oldName, newName) {
+    currentCollections[newName] = currentCollections[oldName];
+    delete currentCollections[oldName];
+    
+    chrome.storage.sync.set({ collections: currentCollections }, () => {
+      displayCollections();
+      updateStatistics();
+      showNotification(`Collection renamed from "${oldName}" to "${newName}"!`);
+    });
+  }
+
   function displayCollections() {
     collectionsList.innerHTML = "";
     const entries = Object.entries(currentCollections);
@@ -448,8 +466,8 @@ document.addEventListener("DOMContentLoaded", function () {
       div.className = "collection-entry";
       div.innerHTML = `
         <div class="collection-info">
-          <div class="collection-name">${name}</div>
-          <div class="collection-aliases">${aliasesStr}</div>
+          <div class="collection-name editable" contenteditable="true" data-collection="${name}" title="Click to edit collection name">${name}</div>
+          <div class="collection-aliases editable" contenteditable="true" data-collection="${name}" title="Click to edit collection aliases">${aliasesStr}</div>
         </div>
         <div class="collection-actions">
           <button data-collection="${name}" class="test-collection-btn">Test</button>
@@ -493,6 +511,32 @@ document.addEventListener("DOMContentLoaded", function () {
         } catch (error) {
           console.error('Error opening collection:', error);
           showNotification(`Error opening collection: ${error.message}`);
+        }
+      });
+    });
+
+    // Editable collection name fields
+    document.querySelectorAll(".collection-name").forEach((div) => {
+      div.addEventListener("blur", (e) => {
+        const oldName = e.target.getAttribute("data-collection");
+        const newName = e.target.textContent.trim();
+        if (!newName || newName === oldName) return;
+        if (currentCollections[newName]) {
+          alert(`Collection "${newName}" already exists.`);
+          e.target.textContent = oldName;
+          return;
+        }
+        renameCollection(oldName, newName);
+      });
+    });
+
+    // Editable collection aliases fields
+    document.querySelectorAll(".collection-aliases").forEach((div) => {
+      div.addEventListener("blur", (e) => {
+        const collectionName = e.target.getAttribute("data-collection");
+        const newAliases = e.target.textContent.trim();
+        if (newAliases && newAliases !== currentCollections[collectionName]) {
+          saveEditedCollection(collectionName, newAliases);
         }
       });
     });

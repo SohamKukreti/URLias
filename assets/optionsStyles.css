@@ -331,11 +331,45 @@
     font-size: 1.2rem;
     display: block;
     margin-bottom: 5px;
+    padding: 4px 6px;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+    cursor: text;
   }
-  
+
+  .collection-name:hover {
+    border-color: var(--terminal-text-dim);
+    background-color: var(--terminal-highlight);
+    text-shadow: 0 0 8px rgba(51, 255, 51, 0.7);
+  }
+
+  .collection-name:focus {
+    outline: none;
+    border-color: var(--terminal-text);
+    background-color: var(--terminal-highlight);
+    box-shadow: 0 0 10px rgba(51, 255, 51, 0.3);
+  }
+
   .collection-aliases {
     color: var(--terminal-text-dim);
     font-size: 1rem;
+    padding: 4px 6px;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+    cursor: text;
+  }
+
+  .collection-aliases:hover {
+    border-color: var(--terminal-text-dim);
+    background-color: var(--terminal-highlight);
+    text-shadow: 0 0 5px rgba(51, 255, 51, 0.5);
+  }
+
+  .collection-aliases:focus {
+    outline: none;
+    border-color: var(--terminal-text);
+    background-color: var(--terminal-highlight);
+    box-shadow: 0 0 10px rgba(51, 255, 51, 0.3);
   }
   
   .collection-actions {
