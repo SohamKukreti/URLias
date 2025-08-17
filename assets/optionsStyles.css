@@ -493,3 +493,10 @@
       grid-template-columns: 1fr;
     }
   }
+
+  .alias-hint {
+    color: var(--terminal-text-dim);
+    font-size: 1rem;
+    margin: 8px 0 0 0;
+    font-style: italic;
+  }

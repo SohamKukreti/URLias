@@ -16,9 +16,6 @@ document.addEventListener("DOMContentLoaded", function () {
   
   const searchTriggerInput = document.getElementById("search-trigger");
   const saveSearchTriggerBtn = document.getElementById("save-search-trigger");
-  const omniboxBehaviorSelect = document.getElementById("omnibox-behavior");
-  const autoSuggestCheckbox = document.getElementById("auto-suggest");
-  const usageTrackingCheckbox = document.getElementById("usage-tracking");
   
   const collectionForm = document.getElementById("collection-form");
   const collectionNameInput = document.getElementById("collection-name");
@@ -51,9 +48,6 @@ document.addEventListener("DOMContentLoaded", function () {
   importFile.addEventListener("change", importData);
   
   saveSearchTriggerBtn.addEventListener("click", saveSearchTrigger);
-  omniboxBehaviorSelect.addEventListener("change", saveSettings);
-  autoSuggestCheckbox.addEventListener("change", saveSettings);
-  usageTrackingCheckbox.addEventListener("change", saveSettings);
   
   collectionForm.addEventListener("submit", saveCollection);
   resetUsageBtn.addEventListener("click", resetUsage);
@@ -63,8 +57,7 @@ document.addEventListener("DOMContentLoaded", function () {
   async function loadAllData() {
     try {
       const data = await chrome.storage.sync.get([
-        "aliases", "collections", "aliasUsage", "searchTrigger", 
-        "omniboxBehavior", "autoSuggest", "usageTracking"
+        "aliases", "collections", "aliasUsage", "searchTrigger"
       ]);
       
       currentAliases = data.aliases || {};
@@ -102,7 +95,6 @@ document.addEventListener("DOMContentLoaded", function () {
           <div class="alias-usage">Used ${usage} times</div>
         </div>
         <div class="alias-actions">
-          <button data-alias="${alias}" class="edit-btn">Edit</button>
           <button data-alias="${alias}" class="test-btn">Test</button>
           <button data-alias="${alias}" class="delete-btn danger-btn">Delete</button>
         </div>
@@ -364,9 +356,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function loadSettings(data) {
     searchTriggerInput.value = data.searchTrigger || "search";
-    omniboxBehaviorSelect.value = data.omniboxBehavior || "current-tab";
-    autoSuggestCheckbox.checked = data.autoSuggest !== false;
-    usageTrackingCheckbox.checked = data.usageTracking !== false;
   }
 
   function saveSearchTrigger() {
@@ -377,18 +366,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     chrome.storage.sync.set({ searchTrigger: trigger }, () => {
       showNotification(`Search trigger word set to '${trigger}'!`);
-    });
-  }
-
-  function saveSettings() {
-    const settings = {
-      omniboxBehavior: omniboxBehaviorSelect.value,
-      autoSuggest: autoSuggestCheckbox.checked,
-      usageTracking: usageTrackingCheckbox.checked
-    };
-    
-    chrome.storage.sync.set(settings, () => {
-      showNotification("Settings saved!");
     });
   }
 
