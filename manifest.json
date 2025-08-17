@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "URLias",
     "description": "Navigate the web instantly with terminal-style URL aliases and custom shortcuts.",
-    "version": "1.5",
+    "version": "2.0",
     "permissions": ["storage"],
     "omnibox": { "keyword": "go" },
     "action": {

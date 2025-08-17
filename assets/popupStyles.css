@@ -243,7 +243,7 @@
   
 
   body::before {
-    content: "URLias v1.5 [Terminal Mode] \A\A Initializing system...\A Loading aliases...\A System ready.\A\A";
+    content: "URLias v2.0 [Terminal Mode] \A\A Initializing system...\A Loading aliases...\A System ready.\A\A";
     white-space: pre;
     display: block;
     color: var(--terminal-text-dim);
